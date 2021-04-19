@@ -282,10 +282,10 @@ def detrend(indf): #Датафрейм на вход из t_comp
     indf['HAE_T_COM-DETREND']=detrendedHAE #Добавляем в основной df столбцы с детрендом
     indf['HAN_T_COM-DETREND']=detrendedHAN
     print('Запись окончательного файла построения графиков')
-    indf.to_csv('/home/gluk/TEMP_DATA/IVS1/IVST.csv', index=True) #Записываем весь датафрейм в файл
+    indf.to_csv('/home/gluk/TEMP_DATA/IVS1/CSV/IVST.csv', index=True) #Записываем весь датафрейм в файл
     df2=indf.tail(10080)#-10080
     print('Запись файла с данными за последнюю неделю')
-    df2.to_csv('/home/gluk/TEMP_DATA/IVS1/IVS1_week.csv', index=True)
+    df2.to_csv('/home/gluk/TEMP_DATA/IVS1/CSV/IVS1_week.csv', index=True)
     outdf=indf
     print('Децимация данных')
     decim(outdf) #Далее последний этап путешествия датафрейма децимация
@@ -296,20 +296,33 @@ def decim(df): # Датафрейм из detrend. Это последний эт
     print('Децимация матрицы, процедура decim')
 
     # !!!!!!! ЗДЕСЬ ВНИМАТЕЛЬНО!!! ОБРАТИТЬ ВНИМАНИЕ НА ЧАСОВЫЕ ПОЯСА ЕСЛИ ИСПОЛЬЗОВАТЬ НА ДРУГОМ КОМПЕ!!!
-    
     df['PD_DATE']=pd.to_datetime(df['DECDATE']+43200, unit='s') #Время в секундах переводим в формат datetime + разница в часовых поясах в секундах и записываем в столбец
-    df.set_index(['PD_DATE']).resample('1H').mean()# Выборка по столбцу времени.Устанавливаем индекс на столбец.  Выборка 1 час. Данные во всех столбцах осредняются
-    df.reset_index(inplace=True) # Сбрасываем столбец индексов. Теперь индексы по умолчанию
-    df['HAE'].replace('',np.nan, inplace=True)#Из за пропусков в данных появляются дыры. Заполняем дыры значениями nan
-    df.dropna(subset=['HAE'], inplace=True) #Проверяем значения nan по столбцу HAE, по идее если он имеет nan, то останые тоже
-    df.reset_index(inplace=True)
-#    df.rename(columns={'PD_DATE':'DATE'}, inplace=True) #Переименоваем колонку времени PD_DATE становится DATE
-    del df['PD_DATE']
-    del df['index']
-    print(df.columns)
+    df_hour=df.set_index(['PD_DATE']).resample('1H').mean()# Выборка по столбцу времени.Устанавливаем индекс на столбец.  Выборка 1 час. Данные во всех столбцах осредняются
+    df_hour.reset_index(inplace=True) # Сбрасываем столбец индексов. Теперь индексы по умолчанию
+    df_hour['HAE'].replace('',np.nan, inplace=True)#Из за пропусков в данных появляются дыры. Заполняем дыры значениями nan
+    df_hour.dropna(subset=['HAE'], inplace=True) #Проверяем значения nan по столбцу HAE, по идее если он имеет nan, то останые тоже
+    df_hour.reset_index(inplace=True)
+    df_hour.rename(columns={'PD_DATE':'DATE'}, inplace=True) #Переименоваем колонку времени PD_DATE становится DATE
+    df_hour['DATE'] = df_hour['DATE'].dt.strftime( "%Y:%m:%d:%H:%M:%S") #Переводим нужный формат времени.
+ #   del df_hour['PD_DATE']
+    del df_hour['index']
+    print(df_hour.columns)
     print('Завершение децимации и запись часового файла')
+    df_hour.to_csv('/home/gluk/TEMP_DATA/IVS1/CSV/IVS1_hour.csv', index=False) #Записываем часовой файл и все. Конец работы скрипта.
+#     df.to_csv('/home/gluk/TEMP_DATA/IVS1/CSV/IVS1_hour.csv', index=True) #Записываем часовой файл и все. Конец работы скрипта.   
+#     df['PD_DATE']=pd.to_datetime(df['DECDATE']+43200, unit='s') #Время в секундах переводим в формат datetime + разница в часовых поясах в секундах и записываем в столбец
+#     df.set_index(['PD_DATE']).resample('1H').mean()# Выборка по столбцу времени.Устанавливаем индекс на столбец.  Выборка 1 час. Данные во всех столбцах осредняются
+#     df.reset_index(inplace=True) # Сбрасываем столбец индексов. Теперь индексы по умолчанию
+#     df['HAE'].replace('',np.nan, inplace=True)#Из за пропусков в данных появляются дыры. Заполняем дыры значениями nan
+#     df.dropna(subset=['HAE'], inplace=True) #Проверяем значения nan по столбцу HAE, по идее если он имеет nan, то останые тоже
+#     df.reset_index(inplace=True)
+# #    df.rename(columns={'PD_DATE':'DATE'}, inplace=True) #Переименоваем колонку времени PD_DATE становится DATE
+#     del df['PD_DATE']
+#     del df['index']
+#     print(df.columns)
+#     print('Завершение децимации и запись часового файла')
 
-    df.to_csv('/home/gluk/TEMP_DATA/IVS1/IVS1_hour.csv', index=True) #Записываем часовой файл и все. Конец работы скрипта.
+#     df.to_csv('/home/gluk/TEMP_DATA/IVS1/CSV/IVS1_hour.csv', index=True) #Записываем часовой файл и все. Конец работы скрипта.
 
     return()
 
